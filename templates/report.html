@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raport PulmoScan - {{ record['patient_name'] }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        #report-content {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            margin: 0 auto;
+            padding: 20mm;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="py-8">
+
+    <div class="max-w-[210mm] mx-auto mb-4 flex justify-between items-center" data-html2canvas-ignore="true">
+       <a href="/history" class="text-gray-500 hover:text-gray-800 font-medium transition"><i class="fa-solid fa-arrow-left mr-2"></i> Înapoi la istoric</a>
+        <button onclick="downloadPDF()" class="bg-[#0f172a] text-white px-5 py-2 rounded-lg font-medium shadow hover:bg-gray-800 transition">
+            Descarcă PDF
+        </button>
+    </div>
+
+    <div id="report-content" class="rounded-sm border border-gray-200 relative pb-32">
+        
+        <div class="flex justify-between items-start border-b-2 border-gray-800 pb-6 mb-8">
+            <div class="flex items-center">
+                <div class="bg-[#0f172a] text-white p-2 rounded-md mr-4 w-12 h-12 flex items-center justify-center">
+                    <i class="fa-solid fa-lungs text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Raport PulmoScan</h1>
+                    <p class="text-gray-500">Centrul de diagnostic medical | Secția de pneumologie</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Data analizei</p>
+                <p class="text-lg font-medium text-gray-900">{{ record['created_at'].split(' ')[0] }}</p>
+                <p class="text-sm text-gray-500">{{ record['created_at'].split(' ')[1] }}</p>
+            </div>
+        </div>
+
+       <div class="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+    <div>
+        <p class="text-xs text-gray-500 font-bold mb-1">Nume pacient</p>
+        <p class="font-semibold text-gray-900">{{ record['patient_name'] }}</p>
+        <p class="text-xs text-gray-500">Vârstă: {{ record['patient_age'] }} ani</p>
+        <p class="text-xs text-gray-500">Sex: {{ record['patient_sex'] }}</p>
+    </div>
+
+    <div>
+        <p class="text-xs text-gray-500 font-bold mb-1">Părinte / tutore</p>
+        <p class="font-semibold text-gray-900">{{ record['guardian_name'] }}</p>
+        <p class="text-xs text-gray-500">{{ record['relationship'] }}</p>
+        <p class="text-xs text-gray-500">{{ record['guardian_email'] }}</p>
+    </div>
+
+    <div>
+        <p class="text-xs text-gray-500 font-bold mb-1">Medic evaluator</p>
+        <p class="font-semibold text-gray-900">Dr. {{ current_user | capitalize }}</p>
+        <p class="text-xs text-gray-500">{{ current_role }}</p>
+        <p class="text-xs text-gray-500">
+    ID raport: PSAI-{{ "%05d"|format(record['id']) }}
+</p>
+    </div>
+</div>
+
+        <div class="mb-8 p-4 border rounded-lg bg-amber-50/30 border-amber-200/60">
+            <h3 class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">Context clinic / simptome pacient</h3>
+            <p class="text-sm text-gray-700 italic">
+                {% if record['clinical_notes'] %}
+                    "{{ record['clinical_notes'] }}"
+                {% else %}
+                    Nu au fost furnizate note clinice subiective la momentul încărcării.
+                {% endif %}
+            </p>
+        </div>
+
+     <div class="mb-8">
+    <div class="grid grid-cols-2 gap-4 bg-black p-2 rounded-xl overflow-hidden shadow-lg">
+        <div class="relative bg-gray-900 flex items-center justify-center h-72">
+            <span class="absolute top-3 left-3 bg-black/70 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
+                Scanare originală
+            </span>
+            <img src="{{ '/' + record['original_path'] }}"
+                 class="w-full h-full object-contain rounded"
+                 alt="Radiografie originală">
+        </div>
+
+        <div class="relative bg-gray-900 flex items-center justify-center h-72">
+            <span class="absolute top-3 left-3 bg-black/70 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
+                Hartă termică Grad-CAM
+            </span>
+            <img src="{{ '/' + record['gradcam_path'] }}"
+                 class="w-full h-full object-contain rounded"
+                 alt="Hartă termică Grad-CAM">
+        </div>
+    </div>
+
+    <p class="text-xs text-gray-500 mt-2 italic text-center">
+        Fig 1.1: Radiografia toracică originală și harta de activare Grad-CAM generată de modelul AI.
+    </p>
+</div>
+
+<div class="rounded-xl border-t-4 shadow-sm p-6 mb-6
+    {% if record['prediction'] == 'NORMAL' %} bg-emerald-50 border-emerald-500
+    {% elif record['prediction'] == 'VIRAL' %} bg-orange-50 border-orange-500
+    {% elif record['prediction'] == 'BACTERIAL' %} bg-red-50 border-red-500
+    {% else %} bg-yellow-50 border-yellow-500
+    {% endif %}">
+
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+                Predicția AI
+            </p>
+
+            <h2 class="text-3xl font-black text-gray-900">
+                {% if record['prediction'] == 'INCONCLUSIVE' %}
+                    Diagnostic incert
+                {% else %}
+                    {{ record['prediction'] | capitalize }}
+                {% endif %}
+            </h2>
+        </div>
+
+        <span class="text-lg font-bold text-white px-3 py-2 rounded
+            {% if record['prediction'] == 'NORMAL' %} bg-emerald-500
+            {% elif record['prediction'] == 'VIRAL' %} bg-orange-500
+            {% elif record['prediction'] == 'BACTERIAL' %} bg-red-600
+            {% else %} bg-yellow-500
+            {% endif %}">
+            {{ record['confidence'] }}%
+        </span>
+    </div>
+
+    <div class="text-sm text-gray-700 leading-relaxed mb-5">
+
+        {% if record['prediction'] == 'NORMAL' %}
+
+           <p>Nu au fost detectate constatări radiografice sugestive pentru pneumonie.</p>
+<div class="mt-4 bg-emerald-100 border-l-4 border-emerald-500 p-3 rounded">
+    <p class="font-semibold text-emerald-800">Concluzie clinică</p>
+    <p class="text-sm text-emerald-700">Radiografia toracică nu prezintă constatări imagistice sugestive pentru pneumonie.</p>
+</div>
+            </p>
+
+        {% elif record['prediction'] == 'VIRAL' %}
+
+            <p>
+                Constatările radiografice sunt mai consistente cu pneumonia virală.
+            </p>
+
+        {% elif record['prediction'] == 'BACTERIAL' %}
+
+            <p>
+                Constatările radiografice sunt mai consistente cu pneumonia bacteriană.
+            </p>
+
+        {% else %}
+
+            <p>
+                Examinarea este neconclusivă. Nu s-a putut stabili un diagnostic cu suficientă certitudine.
+            </p>
+
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded mt-4">
+                <p class="font-semibold text-yellow-900">
+                    Recomandare
+                </p>
+
+                <p class="mt-1 text-yellow-800">
+                    Modelul AI nu a putut stabili o clasificare sigură. Se recomandă evaluarea clinică, un consult pediatric și repetarea radiografiei toracice dacă simptomele persistă.
+                </p>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+    {% if record['prediction'] != 'INCONCLUSIVE' %}
+
+    <div class="grid grid-cols-3 gap-4">
+
+        <div>
+            <div class="flex justify-between text-xs font-semibold text-gray-700 mb-1">
+                <span>Normal</span>
+                <span>{{ record['prob_normal'] }}%</span>
+            </div>
+
+            <div class="w-full bg-gray-200 h-2 rounded">
+                <div class="bg-emerald-500 h-2 rounded"
+                     style="width: {{ record['prob_normal'] }}%">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex justify-between text-xs font-semibold text-gray-700 mb-1">
+                <span>Viral</span>
+                <span>{{ record['prob_viral'] }}%</span>
+            </div>
+
+            <div class="w-full bg-gray-200 h-2 rounded">
+                <div class="bg-orange-500 h-2 rounded"
+                     style="width: {{ record['prob_viral'] }}%">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex justify-between text-xs font-semibold text-gray-700 mb-1">
+                <span>Bacterian</span>
+                <span>{{ record['prob_bacterial'] }}%</span>
+            </div>
+
+            <div class="w-full bg-gray-200 h-2 rounded">
+                <div class="bg-red-600 h-2 rounded"
+                     style="width: {{ record['prob_bacterial'] }}%">
+            </div>
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+<div class="border border-gray-200 rounded-lg p-5 bg-white shadow-sm">
+    <h3 class="text-sm font-bold text-gray-800 mb-4">Notele sistemului</h3>
+    <ul class="space-y-3 text-xs text-gray-600">
+        <li class="flex items-start">
+            <i class="fa-regular fa-circle-check text-emerald-500 mt-0.5 mr-2"></i>
+            Calitatea scanării este considerată suficientă pentru analiză.
+        </li>
+        <li class="flex items-start">
+            <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 mr-2"></i>
+            Acest raport este generat de AI și trebuie validat de un medic radiolog certificat.
+        </li>
+    </ul>
+</div>
+
+        <div class="absolute bottom-10 left-20 right-20 border-t border-gray-200 pt-4 text-center">
+            <p class="text-[10px] text-gray-400">PulmoScan AI v1.0 • Universitatea din Craiova • Proiect de licență • 2026</p>
+            <p class="text-[10px] text-gray-400 mt-1">Generat electronic la data de {{ record['created_at'] }} de către dr. {{ current_user | capitalize }}</p>
+        </div>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            const element = document.getElementById('report-content');
+            const opt = {
+                margin:       0,
+                filename:     'Raport_PulmoScan_{{ record["id"] }}.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            document.querySelector('[data-html2canvas-ignore]').style.display = 'none';
+            html2pdf().set(opt).from(element).save().then(() => {
+                document.querySelector('[data-html2canvas-ignore]').style.display = 'flex';
+            });
+        }
+    </script>
+</body>
+</html>

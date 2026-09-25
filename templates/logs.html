@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulmoScan AI -Jurnal de activitate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        #sidebar { background: linear-gradient(180deg, #08122E, #1E1B4B); }
+        
+        .truncate-2-lines {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] flex h-screen text-gray-800">
+
+    <aside class="w-64 border-r border-gray-200 flex flex-col pt-4 z-30 relative" id="sidebar">
+        <div class="flex flex-col items-center py-6 border-b border-white/10 mb-4">
+    <div class="w-16 h-16 bg-[#1a2a5e] rounded-2xl flex items-center justify-center mb-3 border border-white/20">
+        <i class="fa-solid fa-lungs text-3xl text-blue-400"></i>
+    </div>
+    <h1 class="text-white font-bold text-lg">PulmoScan AI</h1>
+    <p class="text-gray-400 text-xs mt-1">Versiunea 1.0</p>
+    <p class="text-gray-400 text-xs">© 2026</p>
+</div>
+<div class="px-6 py-6">
+    <p class="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400">
+         Navigare principală
+    </p>
+</div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="/" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-briefcase-medical mr-3 w-5"></i> Panou diagnostic
+            </a>
+            <a href="/history" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-regular fa-folder-open mr-3 w-5"></i> Fișe pacienți
+            </a>
+            <a href="/quiz" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-stethoscope mr-3 w-5"></i> Evaluare simptome
+            </a>
+          <a href="/logs" class="flex items-center px-4 py-3 bg-blue-400 text-white rounded-lg text-sm font-medium shadow-sm transition">
+    <i class="fa-solid fa-chart-line mr-3 w-5"></i> Jurnal de activitate 
+</a>
+        </nav>
+
+<div class="mt-auto px-4 pb-6">
+    <div class="px-2 pt-8 pb-3">
+        <p class="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400">
+            Sistem
+        </p>
+    </div>
+
+    <a href="/logout"
+       class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+        <i class="fa-solid fa-arrow-right-from-bracket mr-3 w-5"></i>
+        Deconectare
+    </a>
+</div>
+
+</aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto bg-[#f8fafc]">
+        
+     <header class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-20">
+    <div>
+        <h1 class="text-2xl font-semibold text-[#0a192f]">Jurnal Activități</h1>
+        <p class="text-sm text-gray-500 mt-1">
+            Revizuiți activitatea aplicației și evenimentele de diagnosticare ale sistemului.
+        </p>
+    </div>
+
+    <div class="relative border-l-2 pl-6 border-gray-100">
+        <div class="flex items-center space-x-3">
+            <div class="text-right hidden md:block">
+                <p class="text-sm font-bold text-[#0a192f] leading-tight">{{ current_user | capitalize }}</p>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ current_role }}</p>
+            </div>
+
+            <img src="https://ui-avatars.com/api/?name={{ current_user }}&background=0a192f&color=fff&rounded=true"
+                 class="w-10 h-10 shadow-sm border-2 border-white rounded-full">
+        </div>
+    </div>
+</header>
+
+        <div class="p-8 max-w-7xl mx-auto w-full">
+            
+            <div class="flex justify-between items-end mb-8">
+                
+                <form action="/clear_logs" method="POST" class="m-0" onsubmit="return confirm('AVERTISMENT: Sigur doriți să ștergeți jurnalul de audit? Această acțiune este ireversibilă!');">
+                    <button type="submit" class="flex items-center gap-2 bg-white border border-red-200 text-red-600 px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-red-50 transition shadow-sm">
+                        <i class="fa-solid fa-trash-can"></i> Șterge Jurnalul
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col lg:flex-row lg:items-center gap-6 justify-between">
+                
+                <div class="relative w-full lg:w-80">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="logSearchInput" placeholder="Căutați eveniment sau operator..." 
+                           class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                </div>
+
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Categorie:</span>
+                        <div class="flex gap-1" id="categoryFilters">
+                            <button data-filter="Toate" class="filter-btn-cat px-3 py-1.5 bg-[#0a192f] text-white text-xs font-semibold rounded-md transition">Toate</button>
+                            <button data-filter="Clinic" class="filter-btn-cat px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md hover:bg-gray-200 transition">Clinic</button>
+                            <button data-filter="Sistem" class="filter-btn-cat px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md hover:bg-gray-200 transition">Sistem</button>
+                            <button data-filter="Securitate" class="filter-btn-cat px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md hover:bg-gray-200 transition">Securitate</button>
+                            <button data-filter="Export" class="filter-btn-cat px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md hover:bg-gray-200 transition">Export</button>
+                        </div>
+                    </div>
+                    
+                    <div class="h-6 w-px bg-gray-200 hidden lg:block"></div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nivel:</span>
+                        <div class="flex gap-1" id="levelFilters">
+                            <button data-filter="Toate" class="filter-btn-lvl px-3 py-1.5 bg-[#0a192f] text-white text-xs font-semibold rounded-md transition">Toate</button>
+                            <button data-filter="Info" class="filter-btn-lvl px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md hover:bg-gray-200 transition">Info</button>
+                            <button data-filter="Avertisment" class="filter-btn-lvl px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md hover:bg-gray-200 transition">Avertisment</button>
+                            <button data-filter="Eroare" class="filter-btn-lvl px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md hover:bg-gray-200 transition">Eroare</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200 table-fixed">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="w-40 px-6 py-4 text-left text-[11px] font-black text-gray-500 uppercase tracking-wider">Dată și Oră</th>
+                            <th class="w-32 px-6 py-4 text-left text-[11px] font-black text-gray-500 uppercase tracking-wider">Categorie</th>
+                            <th class="w-28 px-6 py-4 text-left text-[11px] font-black text-gray-500 uppercase tracking-wider">Nivel</th>
+                            <th class="w-40 px-6 py-4 text-left text-[11px] font-black text-gray-500 uppercase tracking-wider">→ Medic/Operator</th>
+                            <th class="w-48 px-6 py-4 text-left text-[11px] font-black text-gray-500 uppercase tracking-wider">Acțiune / Eveniment</th>
+                            <th class="px-6 py-4 text-left text-[11px] font-black text-gray-500 uppercase tracking-wider">Detalii Tehnice</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100" id="logsTableBody">
+                        
+                        {% for log in logs %}
+                        
+                        {% set level = 'Info' %}
+                        {% set level_color = 'text-blue-700 bg-blue-50 border-blue-200' %}
+                        {% set level_icon = 'fa-circle-info' %}
+                        
+                        {% set category = 'Sistem' %}
+                        {% set operator = 'Sistem (Automat)' %}
+                        
+                        {% if 'ERROR' in log.action or 'REJECTED' in log.action or 'FAILED' in log.action %}
+                            {% set level = 'Eroare' %}
+                            {% set level_color = 'text-red-700 bg-red-50 border-red-200' %}
+                            {% set level_icon = 'fa-circle-xmark' %}
+                            {% set category = 'Securitate' %}
+                        {% elif 'DELETE' in log.action or 'CLEARED' in log.action or 'CLEANUP' in log.action %}
+                            {% set level = 'Avertisment' %}
+                            {% set level_color = 'text-amber-700 bg-amber-50 border-amber-200' %}
+                            {% set level_icon = 'fa-triangle-exclamation' %}
+                            {% set operator = 'Administrator' %}
+                        {% elif 'SCAN' in log.action or 'TRIAGE' in log.action %}
+                            {% set category = 'Clinic' %}
+                            {% set operator = 'Radiolog' %}
+                        {% elif 'LOGIN' in log.action or 'LOGOUT' in log.action %}
+                            {% set category = 'Securitate' %}
+                        {% elif 'EXPORT' in log.action %}
+                            {% set category = 'Export' %}
+                            {% set operator = 'Utilizator Autorizat' %}
+                        {% endif %}
+
+                        <tr class="hover:bg-gray-50/80 transition duration-150 log-row" data-category="{{ category }}" data-level="{{ level }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-xs font-semibold text-gray-600 font-mono">{{ log.timestamp.split(' ')[0] }}</div>
+                                <div class="text-[11px] text-gray-400 font-mono mt-0.5">{{ log.timestamp.split(' ')[1] }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-xs font-bold text-[#0a192f]">{{ category }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border {{ level_color }}">
+                                    <i class="fa-solid {{ level_icon }} mr-1.5 opacity-70"></i> {{ level }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center mr-2 text-[10px] font-bold text-gray-600 border border-gray-300">
+                                        <i class="fa-solid fa-user-shield"></i>
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-700">{{ operator }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-xs font-semibold text-gray-900">{{ log.action }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="group relative inline-block w-full">
+                                    <p class="text-[11px] text-gray-500 leading-relaxed truncate-2-lines cursor-help">
+                                        {{ log.details }}
+                                    </p>
+                                    <div class="invisible group-hover:visible absolute z-50 left-0 bottom-full mb-2 w-[400px] p-3 bg-gray-900 text-gray-100 text-[11px] rounded-lg shadow-xl font-medium leading-relaxed">
+                                        {{ log.details }}
+                                        <svg class="absolute text-gray-900 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-16 text-center">
+                                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3 text-gray-400">
+                                    <i class="fa-solid fa-server text-xl"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-gray-900">Jurnalul este gol</h3>
+                                <p class="text-xs text-gray-500 mt-1">Sistemul nu a înregistrat încă nicio acțiune notabilă.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        
+                        <tr id="noLogsResultsRow" style="display: none;">
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-500 italic text-sm">Niciun eveniment găsit care să corespundă filtrelor active.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Variabile pentru starea filtrelor
+        let activeCategory = 'Toate';
+        let activeLevel = 'Toate';
+        let searchQuery = '';
+
+        const rows = document.querySelectorAll('.log-row');
+        const noResultsRow = document.getElementById('noLogsResultsRow');
+        const searchInput = document.getElementById('logSearchInput');
+        
+        const catButtons = document.querySelectorAll('.filter-btn-cat');
+        const lvlButtons = document.querySelectorAll('.filter-btn-lvl');
+
+        // Funcția centrală care aplică toate cele 3 filtre (Text, Categorie, Nivel)
+        function filterTable() {
+            let hasResults = false;
+
+            rows.forEach(row => {
+                const rowCategory = row.getAttribute('data-category');
+                const rowLevel = row.getAttribute('data-level');
+                const text = row.textContent.toLowerCase();
+
+                const matchesSearch = text.includes(searchQuery);
+                const matchesCategory = (activeCategory === 'Toate' || rowCategory === activeCategory);
+                const matchesLevel = (activeLevel === 'Toate' || rowLevel === activeLevel);
+
+                if (matchesSearch && matchesCategory && matchesLevel) {
+                    row.style.display = '';
+                    hasResults = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            noResultsRow.style.display = hasResults || rows.length === 0 ? 'none' : '';
+        }
+
+        // Funcție utilitară pentru a schimba stilul butoanelor (activ vs inactiv)
+        function updateButtonStyles(buttonsList, activeValue) {
+            buttonsList.forEach(btn => {
+                if (btn.getAttribute('data-filter') === activeValue) {
+                    btn.classList.remove('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+                    btn.classList.add('bg-[#0a192f]', 'text-white');
+                } else {
+                    btn.classList.add('bg-gray-100', 'text-gray-600', 'hover:bg-gray-200');
+                    btn.classList.remove('bg-[#0a192f]', 'text-white');
+                }
+            });
+        }
+
+        // Eveniment: Căutare Text
+        if(searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                searchQuery = this.value.toLowerCase();
+                filterTable();
+            });
+        }
+
+        // Eveniment: Click pe Butoane Categorie
+        catButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                activeCategory = this.getAttribute('data-filter');
+                updateButtonStyles(catButtons, activeCategory);
+                filterTable();
+            });
+        });
+
+        // Eveniment: Click pe Butoane Nivel
+        lvlButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                activeLevel = this.getAttribute('data-filter');
+                updateButtonStyles(lvlButtons, activeLevel);
+                filterTable();
+            });
+        });
+    </script>
+</body>
+</html>

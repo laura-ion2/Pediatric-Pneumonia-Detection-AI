@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulmoScan AI - Panou diagnostic</title>
+
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='icon.ico') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        #sidebar { background: linear-gradient(180deg, #08122E, #1E1B4B); }
+    </style>
+</head>
+
+<body class="bg-blue-50/30 flex h-screen text-gray-800">
+
+    <aside class="w-64 border-r border-gray-200 flex flex-col pt-4 z-30 relative" id="sidebar">
+       <div class="flex flex-col items-center py-6 border-b border-white/10 mb-4">
+    <div class="w-16 h-16 bg-[#1a2a5e] rounded-2xl flex items-center justify-center mb-3 border border-white/20">
+        <i class="fa-solid fa-lungs text-3xl text-blue-400"></i>
+    </div>
+    <h1 class="text-white font-bold text-lg">PulmoScan AI</h1>
+    <p class="text-gray-400 text-xs mt-1">Versiunea 1.0</p>
+    <p class="text-gray-400 text-xs">© 2026</p>
+</div>
+<div class="px-6 py-6">
+    <p class="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400">
+        Navigare principală
+    </p>
+</div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="/" class="flex items-center px-4 py-3 bg-blue-400 text-white rounded-lg text-sm font-medium shadow-sm transition">
+                <i class="fa-solid fa-briefcase-medical mr-3 w-5"></i> Panou diagnostic
+            </a>
+            <a href="/history" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-regular fa-folder-open mr-3 w-5"></i> Fișe pacienți
+            </a>
+            <a href="/quiz" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-stethoscope mr-3 w-5"></i> Evaluare simptome
+            </a>
+            <a href="/logs" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-terminal mr-3 w-5"></i> Jurnal de activitate
+            </a>
+      </nav>
+
+<div class="mt-auto px-4 pb-6">
+    <div class="px-2 pt-8 pb-3">
+        <p class="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400">
+            Sistem
+        </p>
+    </div>
+
+    <a href="/logout"
+       class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+        <i class="fa-solid fa-arrow-right-from-bracket mr-3 w-5"></i>
+        Deconectare
+    </a>
+</div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto relative">
+
+        <header class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-20">
+            <div>
+    <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-semibold text-[#0a192f]">
+            Panou diagnostic
+        </h1>
+
+        <span class="bg-amber-50 text-amber-700 border border-amber-200
+                     px-3 py-1 rounded-full text-xs font-semibold">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+            Model AI pediatric
+        </span>
+    </div>
+
+    <p class="text-sm text-gray-500 mt-1">
+        Detectarea pneumoniei pediatrice pe baza radiografiilor toracice.
+    </p>
+</div>
+
+            <div class="flex items-center space-x-6">
+                <div class="relative">
+                    <button id="notificationBtn" class="text-gray-500 hover:text-[#0a192f] transition relative focus:outline-none mt-1">
+                        <i class="fa-regular fa-bell text-2xl"></i>
+
+                        {% if alerts %}
+                        <span id="notificationPing" class="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white"></span>
+                        </span>
+                        {% endif %}
+                    </button>
+
+                    <div id="notificationDropdown" class="hidden absolute right-0 mt-4 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all z-40">
+                        <div class="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800 flex items-center text-sm">
+                                <i class="fa-solid fa-shield-halved text-red-500 mr-2"></i> Alerte recente
+                            </h3>
+
+                            <div class="flex items-center space-x-3">
+                                {% if alerts %}
+                                <button id="clearNotifBtn" class="text-xs font-bold text-blue-500 hover:text-blue-700 transition">Șterge</button>
+                                {% endif %}
+                                <button id="closeNotifBtn" class="text-gray-400 hover:text-gray-700 transition">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 space-y-3 max-h-96 overflow-y-auto">
+                            <div id="dynamicAlertsContainer" class="space-y-3">
+                                {% if alerts %}
+                                    {% for alert in alerts %}
+                                    <div class="border rounded-xl p-4 relative overflow-hidden {% if alert['prediction'] == 'BACTERIAL' %}bg-red-50 border-red-100{% else %}bg-blue-50 border-blue-100{% endif %}">
+                                        <div class="absolute top-0 left-0 w-1 h-full {% if alert['prediction'] == 'BACTERIAL' %}bg-red-500{% else %}bg-blue-500{% endif %}"></div>
+                                        <div class="flex items-start">
+                                            <span class="w-2.5 h-2.5 mt-1 rounded-full mr-3 shrink-0 opacity-50 {% if alert['prediction'] == 'BACTERIAL' %}bg-red-500{% else %}bg-blue-500{% endif %}"></span>
+                                            <div>
+                                                <h4 class="text-sm font-bold text-[#0a192f]">
+                                                    Caz semnalat:: {{ alert['prediction'] }} ({{ alert['confidence'] }}%)
+                                                </h4>
+                                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-1 mb-1">
+                                                    Pacient: {{ alert['patient_name'] }}
+                                                </p>
+                                                <p class="text-[11px] text-gray-600 leading-relaxed">
+                                                    {{ alert['created_at'] }} - Necesită verificare.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+
+                            <p id="emptyNotifMessage" class="text-xs text-center text-gray-500 py-2 {% if alerts %}hidden{% endif %}">
+                                Nu există alerte critice recente.
+                            </p>
+
+                            <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                                <div class="flex items-start">
+                                    <i class="fa-regular fa-circle-check text-emerald-500 mt-0.5 mr-3 shrink-0"></i>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-[#0a192f]">Sincronizare completă a rețelei</h4>
+                                        <p class="text-xs text-emerald-800/80 leading-relaxed mt-1">
+                                            Toate modelele IA sunt actualizate pe serverul local de diagnostic.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-gray-50 text-center border-t border-gray-100">
+                            <a href="/history" class="text-xs font-bold text-blue-500 hover:text-blue-700 uppercase tracking-wider transition">
+                                Vezi istoricul complet al pacienților
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative border-l-2 pl-6 border-gray-100">
+                   <div class="flex items-center space-x-3">
+                        <div class="text-right hidden md:block">
+                            <p class="text-sm font-bold text-[#0a192f] leading-tight">{{ current_user | capitalize }}</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ current_role }}</p>
+                        </div>
+
+                        <img src="https://ui-avatars.com/api/?name={{ current_user }}&background=0a192f&color=fff&rounded=true"
+                             class="w-10 h-10 shadow-sm border-2 border-white rounded-full">
+                    </div>
+
+            </div>
+        </header>
+
+        <div class="p-8 max-w-6xl mx-auto w-full">
+            <div class="grid grid-cols-5 gap-4 mb-6">
+
+   <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+    <p class="text-sm font-semibold text-gray-500 mb-1">Total analize</p>
+    <p class="text-4xl font-bold text-gray-800">{{ stats.total or 0 }}</p>
+    <p class="text-xs text-gray-400 mt-1">Analize efectuate în total</p>
+    <svg class="absolute bottom-3 right-3 w-24 h-10 opacity-30" viewBox="0 0 96 40">
+        <polyline
+            points="0,35 12,28 24,32 36,20 48,25 60,10 72,18 84,8 96,12"
+            fill="none"
+            stroke="#818cf8"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        />
+    </svg>
+</div>
+
+    <div class="bg-green-50 border border-green-100 rounded-xl p-5 shadow-sm flex justify-between items-center">
+        <div>
+            <p class="text-sm font-semibold text-green-600 mb-1">Normal</p>
+            <p class="text-4xl font-bold text-gray-800">{{ stats.normal or 0 }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ ((stats.normal or 0) / (stats.total or 1) * 100) | round(1) }}% din total</p>
+        </div>
+        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-lungs text-2xl text-green-600"></i>
+        </div>
+    </div>
+
+    <div class="bg-orange-50 border border-orange-100 rounded-xl p-5 shadow-sm flex justify-between items-center">
+        <div>
+            <p class="text-sm font-semibold text-orange-500 mb-1">Pneumonie virală</p>
+            <p class="text-4xl font-bold text-gray-800">{{ stats.viral or 0 }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ ((stats.viral or 0) / (stats.total or 1) * 100) | round(1) }}% din total</p>
+        </div>
+        <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-virus text-2xl text-orange-500"></i>
+        </div>
+    </div>
+
+    <div class="bg-red-50 border border-red-100 rounded-xl p-5 shadow-sm flex justify-between items-center">
+        <div>
+            <p class="text-sm font-semibold text-red-600 mb-1">Pneumonie bacteriană</p>
+            <p class="text-4xl font-bold text-gray-800">{{ stats.bacterial or 0 }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ ((stats.bacterial or 0) / (stats.total or 1) * 100) | round(1) }}% din total</p>
+        </div>
+        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-bacteria text-2xl text-red-600"></i>
+        </div>
+    </div>
+
+    <div class="bg-yellow-50 border border-yellow-100 rounded-xl p-5 shadow-sm flex justify-between items-center">
+        <div>
+            <p class="text-sm font-semibold text-yellow-600 mb-1">Neconcludent</p>
+            <p class="text-4xl font-bold text-gray-800">{{ stats.inconclusive or 0 }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ ((stats.inconclusive or 0) / (stats.total or 1) * 100) | round(1) }}% din total</p>
+        </div>
+        <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-question text-2xl text-yellow-600"></i>
+        </div>
+    </div>
+
+</div>
+            <div class="bg-white rounded-xl border border-gray-200 p-8 shadow-sm mb-8">
+                <form id="uploadForm" method="POST" enctype="multipart/form-data" class="space-y-6">
+
+                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2">
+                        <i class="fa-solid fa-id-card text-blue-400 mr-2"></i>Informații pacient
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nume complet pacient</label>
+                            <input type="text" name="patient_name" placeholder="Ex: Eduard Popescu" required
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Vârstă</label>
+                            <input type="number" name="patient_age" placeholder="Ex: 4" required min="1" max="18"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Sex</label>
+                            <select name="patient_sex" required
+                                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm bg-white">
+                                <option value="Masculin">Masculin</option>
+                                <option value="Feminin">Feminin</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 pt-2">
+                        <i class="fa-solid fa-user-shield text-blue-400 mr-2"></i>Informații părinte / tutore
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nume complet părinte / tutore</label>
+                            <input type="text" name="guardian_name" placeholder="Ex: Maria Popescu"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Relația cu pacientul</label>
+                            <select name="relationship"
+                                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm bg-white">
+                                <option value="Mama">Mama</option>
+                                <option value="Tata">Tata</option>
+                               <option value="Frate">Frate</option>
+<option value="Sora">Sora</option>
+                                <option value="Tutore legal">Tutore legal</option>
+                                <option value="Altă relație">Altă relație</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">E-mail părinte / tutore</label>
+                            <input type="email" name="guardian_email" placeholder="parent@example.com"
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Note clinice / simptome opționale</label>
+                        <textarea name="clinical_notes" rows="2"
+                                  placeholder="Ex: febră de 2 zile, tuse productivă, respirație rapidă, apetit redus."
+                                  class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"></textarea>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-gray-800 border-b pb-2 pt-2">
+                        <i class="fa-solid fa-image text-blue-400 mr-2"></i>Document imagistic - radiografie toracică
+                    </h3>
+
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50/50 transition-all duration-300" id="upload-zone">
+                        <div id="upload-placeholder">
+                            <div class="mx-auto w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3 text-blue-400">
+                                <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                            </div>
+
+                            <h4 class="text-sm font-medium text-gray-900 mb-1">Selectează sau trage radiografia aici</h4>
+                            <p class="text-xs text-gray-500 mb-4">Formate acceptate: PNG, JPG și JPEG. Maximum: 50MB.</p>
+                        </div>
+
+                        <div id="image-preview-container" class="hidden mb-6">
+                            <img id="image-preview" class="mx-auto max-h-64 object-contain rounded-lg shadow-md border border-gray-200" src="" alt="X-Ray Preview">
+                            <p class="text-xs font-semibold text-emerald-600 mt-3">
+                                <i class="fa-solid fa-circle-check mr-1"></i> Imagine selectată cu succes. Pregătită pentru analiză!
+                            </p>
+                        </div>
+
+                        <input type="file" name="file" id="file" required accept=".png, .jpg, .jpeg"
+                               class="mx-auto block text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 file:cursor-pointer hover:file:bg-blue-100 transition">
+                    </div>
+
+                    <button id="submitBtn" type="submit"
+                            class="w-full bg-[#0a192f] text-white rounded-lg py-3.5 text-sm font-bold hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-brain"></i> Pornește analiza cu inteligență artificială
+                    </button>
+
+                </form>
+            </div>
+
+            {% if result %}
+                {% if result.success %}
+                    {% set normal_prob = result.probs.NORMAL if result.probs is defined and result.probs.NORMAL is defined else 0 %}
+                    {% set viral_prob = result.probs.VIRAL if result.probs is defined and result.probs.VIRAL is defined else 0 %}
+                    {% set bacterial_prob = result.probs.BACTERIAL if result.probs is defined and result.probs.BACTERIAL is defined else 0 %}
+
+                    <div class="grid grid-cols-2 gap-1 bg-black p-1 rounded-xl mb-6 overflow-hidden shadow-lg">
+                        <div class="relative bg-gray-900 aspect-video flex items-center justify-center group">
+                            <span class="absolute top-4 left-4 text-white text-xs font-bold bg-black/70 px-2 py-1 rounded cursor-help flex items-center">
+                                RADIOGRAFIE ORIGINALĂ <i class="fa-solid fa-circle-info ml-2 text-gray-300"></i>
+                                <span class="invisible group-hover:visible absolute left-0 top-full mt-2 w-48 p-2 bg-gray-800 text-white text-[10px] rounded shadow-lg z-50 font-normal leading-tight">
+                                    Radiografia originală, nemodificată, utilizată ca bază pentru predicție.
+                                </span>
+                            </span>
+
+                            {% if result.original_url is defined and result.original_url %}
+                                <img src="{{ '/' + result.original_url }}" class="h-full object-contain" alt="Original X-ray">
+                            {% else %}
+                                <p class="text-white text-sm">Imaginea originală nu este disponibilă.</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="relative bg-gray-900 aspect-video flex items-center justify-center group">
+                            <span class="absolute top-4 left-4 text-white text-xs font-bold bg-black/70 px-2 py-1 rounded cursor-help flex items-center">
+                                HARTĂ GRAD-CAM <i class="fa-solid fa-circle-info ml-2 text-gray-300"></i>
+                                <span class="invisible group-hover:visible absolute left-0 top-full mt-2 w-48 p-2 bg-gray-800 text-white text-[10px] rounded shadow-lg z-50 font-normal leading-tight">
+                                    Culorile calde evidențiază zonele pulmonare considerate relevante de modelul AI.
+                                </span>
+                            </span>
+
+                            {% if result.gradcam_url is defined and result.gradcam_url %}
+                                <img src="{{ '/' + result.gradcam_url }}" class="h-full object-contain" alt="Grad-CAM Heatmap">
+                            {% else %}
+                                <p class="text-white text-sm">Imaginea Grad-CAM nu este disponibilă.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm mb-6">
+    <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center
+            {% if result.prediction == 'NORMAL' %}
+                bg-green-100 text-green-600
+            {% elif result.prediction == 'VIRAL' %}
+                bg-blue-100 text-blue-600
+            {% elif result.prediction == 'BACTERIAL' %}
+                bg-red-100 text-red-600
+            {% else %}
+                bg-yellow-100 text-yellow-600
+            {% endif %}">
+            
+            {% if result.prediction == 'NORMAL' %}
+                <i class="fa-solid fa-circle-check text-xl"></i>
+            {% elif result.prediction == 'VIRAL' %}
+                <i class="fa-solid fa-virus text-xl"></i>
+            {% elif result.prediction == 'BACTERIAL' %}
+                <i class="fa-solid fa-bacteria text-xl"></i>
+            {% else %}
+                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+            {% endif %}
+        </div>
+
+        <div>
+            <h3 class="text-lg font-bold text-[#0a192f] mb-1">
+                Recomandare clinică
+            </h3>
+
+            {% if result.prediction == "NORMAL" %}
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Radiografia nu prezintă indicii semnificative de pneumonie conform modelului AI.
+                    Se recomandă corelarea rezultatului cu simptomele pacientului și evaluarea clinică, dacă acestea persistă.
+                </p>
+
+            {% elif result.prediction == "VIRAL" %}
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Rezultatul sugerează o posibilă pneumonie virală. Se recomandă corelarea cu simptomatologia,
+                    monitorizarea evoluției clinice și validarea rezultatului de către un medic specialist.
+                </p>
+
+            {% elif result.prediction == "BACTERIAL" %}
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Rezultatul sugerează o posibilă pneumonie bacteriană. Se recomandă evaluare medicală rapidă,
+                    corelarea cu datele clinice și investigații suplimentare pentru stabilirea conduitei terapeutice.
+                </p>
+
+            {% else %}
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Modelul AI nu a identificat suficiente dovezi pentru o clasificare sigură.
+                    Se recomandă consult medical, corelarea cu simptomele și, dacă este necesar, repetarea investigației imagistice.
+                </p>
+            {% endif %}
+
+            <p class="text-xs text-gray-400 mt-3">
+                Această recomandare este generată automat și nu înlocuiește diagnosticul stabilit de medic.
+            </p>
+        </div>
+    </div>
+</div>
+
+                    <div class="grid grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white border-t-4 border-t-green-500 shadow-sm rounded-b-lg p-6 border border-gray-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-xs font-bold text-gray-500 tracking-wider">NORMAL</span>
+                                <i class="fa-regular fa-circle-check text-green-500"></i>
+                            </div>
+                            <div class="text-4xl font-bold text-gray-800 mb-4">{{ normal_prob }}%</div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5">
+                                <div class="bg-green-500 h-1.5 rounded-full" style="width: {{ normal_prob }}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border-t-4 border-t-blue-400 shadow-sm rounded-b-lg p-6 border border-gray-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-xs font-bold text-gray-500 tracking-wider">PNEUMONIE VIRALĂ</span>
+                                <i class="fa-solid fa-circle-info text-blue-400"></i>
+                            </div>
+                            <div class="text-4xl font-bold text-gray-800 mb-4">{{ viral_prob }}%</div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5">
+                                <div class="bg-blue-400 h-1.5 rounded-full" style="width: {{ viral_prob }}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border-t-4 border-t-red-600 shadow-sm rounded-b-lg p-6 border border-gray-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-xs font-bold text-gray-500 tracking-wider">PNEUMONIE BACTERIANĂ</span>
+                                <i class="fa-solid fa-triangle-exclamation text-red-600"></i>
+                            </div>
+                            <div class="text-4xl font-bold text-gray-800 mb-4">{{ bacterial_prob }}%</div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5">
+                                <div class="bg-red-600 h-1.5 rounded-full" style="width: {{ bacterial_prob }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#0a192f] rounded-xl p-6 flex flex-col lg:flex-row items-center justify-between shadow-lg gap-6">
+                        <div class="flex items-center text-white w-full lg:w-auto">
+                            <i class="fa-solid fa-file-medical text-3xl text-blue-400 mr-4"></i>
+                            <div>
+    <h4 class="font-semibold text-lg flex items-center">
+       Rezultat clinic pregătit
+    </h4>
+
+    {% if result.prediction == "INCONCLUSIVE" %}
+
+    <p class="text-yellow-300 text-sm font-semibold">
+        ⚠ Diagnostic neconcludent
+    </p>
+
+    <p class="text-gray-300 text-sm mt-1">
+        Modelul AI nu a identificat suficiente dovezi pentru o clasificare sigură.
+    </p>
+
+    <p class="text-gray-400 text-xs mt-2">
+        Recomandare: corelarea cu simptomele pacientului, consult medical și,
+        dacă este necesar, repetarea radiografiei toracice.
+    </p>
+
+    {% else %}
+
+    <p class="text-gray-400 text-sm">
+        Predicția AI sugerează
+        <strong class="text-white">{{ result.prediction }}</strong>
+        cu o încredere de
+        <strong class="text-white">{{ result.confidence }}%</strong>.
+    </p>
+
+    {% endif %}
+</div>
+
+                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+                            <a href="/" class="px-5 py-2 border border-gray-500 text-gray-300 rounded-md hover:bg-gray-800 transition text-sm font-medium text-center">
+                                Renunță
+                            </a>
+
+                            {% if result.patient_email is defined and result.patient_email %}
+                            <button id="sendEmailBtn" onclick="sendPatientEmail('{{ result.record_id }}')"
+                                    class="px-5 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-500 transition text-sm font-bold flex items-center justify-center shadow-md">
+                                <i class="fa-solid fa-envelope mr-2"></i> Trimite către tutore
+                            </button>
+                            {% endif %}
+
+                            {% if result.record_id is defined and result.record_id %}
+                            <a href="/report/{{ result.record_id }}" target="_blank"
+                               class="px-5 py-2 bg-blue-400 text-[#0a192f] rounded-md hover:bg-blue-500 transition text-sm font-bold flex items-center justify-center shadow-md hover:shadow-lg">
+                                <i class="fa-solid fa-file-pdf mr-2"></i> Raport clinic
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {% else %}
+                    <div class="p-5 bg-red-50 text-red-800 rounded-xl border border-red-200 shadow-sm flex items-start">
+                        <i class="fa-solid fa-triangle-exclamation text-xl mr-3 text-red-600 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-bold mb-1">Eroare la procesarea imaginii</h4>
+                            <p class="text-sm">{{ result.error }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        const fileInput = document.getElementById('file');
+        const uploadZone = document.getElementById('upload-zone');
+        const uploadPlaceholder = document.getElementById('upload-placeholder');
+        const previewContainer = document.getElementById('image-preview-container');
+        const previewImage = document.getElementById('image-preview');
+
+        function handleFile(file) {
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadPlaceholder.classList.add('hidden');
+                    previewImage.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+
+                    uploadZone.classList.remove('border-dashed', 'border-gray-300', 'bg-gray-50/50', 'border-blue-400', 'bg-blue-50/50');
+                    uploadZone.classList.add('border-solid', 'border-emerald-200', 'bg-emerald-50/30');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function(event) {
+                handleFile(event.target.files[0]);
+            });
+        }
+
+        if (uploadZone) {
+            uploadZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadZone.classList.add('border-blue-400', 'bg-blue-50/50', 'border-solid');
+                uploadZone.classList.remove('border-gray-300', 'border-dashed');
+            });
+
+            uploadZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadZone.classList.remove('border-blue-400', 'bg-blue-50/50', 'border-solid');
+                uploadZone.classList.add('border-gray-300', 'border-dashed');
+            });
+
+            uploadZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadZone.classList.remove('border-blue-400', 'bg-blue-50/50', 'border-solid');
+
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        const uploadForm = document.getElementById('uploadForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function() {
+                if (fileInput.files.length > 0) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('cursor-not-allowed', 'opacity-90');
+                    submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-lg"></i> Rețeaua neuronală analizează radiografia...';
+                }
+            });
+        }
+
+        function sendPatientEmail(recordId) {
+            const btn = document.getElementById('sendEmailBtn');
+            if (!btn) return;
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Se trimite....';
+            btn.disabled = true;
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
+
+            fetch('/send_email/' + recordId, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> E-mail trimis';
+                        btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                        btn.classList.add('bg-gray-600', 'hover:bg-gray-600');
+                    } else {
+                        btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> Eroare';
+                        btn.classList.remove('bg-emerald-600');
+                        btn.classList.add('bg-red-600');
+                        btn.disabled = false;
+                    }
+                })
+                .catch(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                    alert("A apărut o eroare la conexiunea cu serverul.");
+                });
+        }
+
+        const notifBtn = document.getElementById('notificationBtn');
+        const notifDropdown = document.getElementById('notificationDropdown');
+        const closeNotifBtn = document.getElementById('closeNotifBtn');
+        const clearNotifBtn = document.getElementById('clearNotifBtn');
+        
+        if (notifBtn && notifDropdown) {
+            notifBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notifDropdown.classList.toggle('hidden');
+                if (profileDropdown) profileDropdown.classList.add('hidden');
+            });
+        }
+
+
+        if (closeNotifBtn && notifDropdown) {
+            closeNotifBtn.addEventListener('click', function() {
+                notifDropdown.classList.add('hidden');
+            });
+        }
+
+        document.addEventListener('click', function(event) {
+            if (notifDropdown && notifBtn && !notifDropdown.contains(event.target) && !notifBtn.contains(event.target)) {
+                notifDropdown.classList.add('hidden');
+            }
+           
+        });
+
+        if (clearNotifBtn) {
+            clearNotifBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+
+                const dynamicAlertsContainer = document.getElementById('dynamicAlertsContainer');
+                const ping = document.getElementById('notificationPing');
+                const emptyNotifMessage = document.getElementById('emptyNotifMessage');
+
+                if (dynamicAlertsContainer) dynamicAlertsContainer.style.display = 'none';
+                clearNotifBtn.style.display = 'none';
+                if (ping) ping.style.display = 'none';
+                if (emptyNotifMessage) emptyNotifMessage.classList.remove('hidden');
+            });
+        }
+    </script>
+
+</body>
+</html>

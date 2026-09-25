@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>PulmoScan AI - Evaluarea simptomelor pediatrice</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+#sidebar {
+    background: linear-gradient(180deg, #08122E, #1E1B4B);
+}
+
+        .symptom-checkbox input[type="checkbox"] {
+            display: none;
+        }
+
+        .symptom-checkbox input[type="checkbox"]:checked + div {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e3a8a;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+
+        .symptom-checkbox input[type="checkbox"]:checked + div .check-icon {
+            color: #3b82f6;
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body class="bg-[#f8fafc] flex h-screen text-gray-800">
+    <aside class="w-64 border-r border-gray-200 flex flex-col pt-4 z-30 relative" id="sidebar">
+      <div class="flex flex-col items-center py-6 border-b border-white/10 mb-4">
+    <div class="w-16 h-16 bg-[#1a2a5e] rounded-2xl flex items-center justify-center mb-3 border border-white/20">
+        <i class="fa-solid fa-lungs text-3xl text-blue-400"></i>
+    </div>
+    <h1 class="text-white font-bold text-lg">PulmoScan AI</h1>
+    <p class="text-gray-400 text-xs mt-1">Versiunea 1.0</p>
+    <p class="text-gray-400 text-xs">© 2026</p>
+</div>
+<div class="px-6 py-6">
+    <p class="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400">
+        Navigare principală
+    </p>
+</div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="/" class="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition">
+                <i class="fa-solid fa-briefcase-medical mr-3"></i> Panou diagnostic
+            </a>
+
+            <a href="/history" class="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition">
+                <i class="fa-solid fa-folder-open mr-3"></i> Fișe pacienți
+            </a>
+
+          <a href="/quiz" class="flex items-center px-4 py-3 bg-blue-400 text-white rounded-lg text-sm font-medium shadow-sm transition">
+    <i class="fa-solid fa-stethoscope mr-3 w-5"></i> Evaluare simptome
+</a>
+
+            <a href="/logs" class="flex items-center px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition">
+                <i class="fa-solid fa-chart-line mr-3"></i> Jurnal de activitate
+            </a>
+        </nav>
+        <div class="mt-auto px-4 pb-6">
+
+    <div class="px-2 pt-8 pb-3">
+        <p class="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400">
+            Sistem
+        </p>
+    </div>
+
+    <a href="/logout"
+       class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+        <i class="fa-solid fa-arrow-right-from-bracket mr-3 w-5"></i>
+        Deconectare
+    </a>
+
+</div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto bg-[#f8fafc]">
+
+       <header class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-20">
+    <div>
+        <h1 class="text-2xl font-semibold text-[#0a192f]">Evaluare simptome</h1>
+        <p class="text-sm text-gray-500 mt-1">Evaluarea simptomelor asociate pneumoniei pediatrice și suport pentru triaj clinic.</p>
+    </div>
+
+    <div class="flex items-center space-x-6">
+        <div class="relative">
+          <div class="flex items-center space-x-3">
+                <div class="text-right hidden md:block">
+                    <p class="text-sm font-bold text-[#0a192f] leading-tight">{{ current_user | capitalize }}</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ current_role }}</p>
+                </div>
+
+                <img src="https://ui-avatars.com/api/?name={{ current_user }}&background=0a192f&color=fff&rounded=true"
+                     class="w-10 h-10 shadow-sm border-2 border-white rounded-full">
+</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+        <div class="p-8 max-w-5xl mx-auto w-full">
+
+            <div class="mb-8">
+                <h2 class="text-4xl font-bold text-[#0f172a] mb-3">
+                    Sistem de triaj clinic pediatric
+                </h2>
+
+                <p class="text-gray-500">
+                    Selectați simptomele raportate de părinte sau tutore pentru screening-ul pneumoniei pediatrice.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8">
+
+                <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                    <form method="POST">
+
+                        <h3 class="font-bold text-gray-800 mb-4 border-b pb-2 flex items-center">
+                            <div class="w-8 h-8 rounded bg-red-100 text-red-500 flex items-center justify-center mr-3">
+                                <i class="fa-solid fa-temperature-half"></i>
+                            </div>
+                           Semne Generale și Sistemice
+                        </h3>
+
+                        <div class="grid grid-cols-2 gap-3 mb-8">
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="febra_mare"
+                                       {% if result and 'febra_mare' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Febră înaltă (&gt;39°C) </span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="febra_moderata"
+                                       {% if result and 'febra_moderata' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Febră moderată</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="frisoane"
+                                       {% if result and 'frisoane' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Frisoane</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="oboseala"
+                                       {% if result and 'oboseala' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Oboseală / Astenie</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="iritabilitate"
+                                       {% if result and 'iritabilitate' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Iritabilitate</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="alimentatie_redusa"
+                                       {% if result and 'alimentatie_redusa' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Alimentație redusă / Refuz alimentar</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                        </div>
+
+                        <h3 class="font-bold text-gray-800 mb-4 border-b pb-2 flex items-center">
+                            <div class="w-8 h-8 rounded bg-blue-100 text-blue-500 flex items-center justify-center mr-3">
+                                <i class="fa-solid fa-lungs"></i>
+                            </div>
+                            Sistem Respirator
+                        </h3>
+
+                        <div class="grid grid-cols-2 gap-3 mb-8">
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="tuse_seaca"
+                                       {% if result and 'tuse_seaca' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Tuse seacă</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="sputa_galben_verzuie"
+                                       {% if result and 'sputa_galben_verzuie' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Tuse productivă (cu spută)</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="tahipnee"
+                                       {% if result and 'tahipnee' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Respirație rapidă (Tahipnee)</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="wheezing"
+                                       {% if result and 'wheezing' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Respirație șuierătoare </span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="dispnee"
+                                       {% if result and 'dispnee' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Dificultăți respiratorii / Retracții</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="durere_toracica"
+                                       {% if result and 'durere_toracica' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Durere toracică</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="nas_infundat"
+                                       {% if result and 'nas_infundat' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Nas înfundat (Coriză)</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                        </div>
+
+                        <h3 class="font-bold text-gray-800 mb-4 border-b pb-2 flex items-center">
+                            <div class="w-8 h-8 rounded bg-purple-100 text-purple-500 flex items-center justify-center mr-3">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                            </div>
+                            Tipul debutului
+                        </h3>
+
+                        <div class="grid grid-cols-2 gap-3 mb-8">
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="debut_brusc"
+                                       {% if result and 'debut_brusc' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Debut brusc (ore)</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                            <label class="symptom-checkbox cursor-pointer">
+                                <input type="checkbox" name="symptoms" value="debut_lent"
+                                       {% if result and 'debut_lent' in result.symptoms %}checked{% endif %}>
+                                <div class="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition border-gray-200">
+                                    <span class="font-medium text-sm">Debut gradual (lent)</span>
+                                    <i class="fa-solid fa-circle-check check-icon text-gray-200 opacity-50 transition"></i>
+                                </div>
+                            </label>
+
+                        </div>
+
+                        <button type="submit"
+                                class="w-full mt-4 bg-[#0f172a] text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-800 transition flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-microscope mr-2"></i>
+                           Evaluează simptomele
+                        </button>
+
+                    </form>
+                </div>
+
+                {% if result %}
+                <div class="w-full lg:w-1/3">
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 sticky top-10">
+                        <h3 class="text-xl font-bold text-[#0f172a] mb-6 border-b pb-4">Rezultat triaj</h3>
+
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-4 relative overflow-hidden">
+                            <i class="fa-solid fa-bacteria absolute -right-4 -bottom-4 text-6xl text-red-100"></i>
+                            <h4 class="font-bold text-red-700 mb-1 text-sm uppercase tracking-wider relative z-10">Scor bacterian</h4>
+                            <div class="text-4xl font-black text-red-600 relative z-10">
+                                {{ result.bacterial_score }}
+                                <span class="text-sm font-normal text-red-400">pct</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8 relative overflow-hidden">
+                            <i class="fa-solid fa-virus absolute -right-4 -bottom-4 text-6xl text-blue-100"></i>
+                            <h4 class="font-bold text-blue-700 mb-1 text-sm uppercase tracking-wider relative z-10">Scor viral / Atipic</h4>
+                            <div class="text-4xl font-black text-blue-600 relative z-10">
+                                {{ result.viral_score }}
+                                <span class="text-sm font-normal text-blue-400">pct</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-100 rounded-xl p-5 border border-slate-200">
+                            <h4 class="font-bold text-sm text-slate-800 mb-2 flex items-center">
+                                <i class="fa-solid fa-robot mr-2 text-slate-500"></i>
+                                Concluzia sistemului expert
+                            </h4>
+
+                            <p class="text-slate-600 text-sm leading-relaxed font-medium">
+                                {{ result.suggestion }}
+                            </p>
+                        </div>
+
+                        <a href="/quiz" class="block text-center mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
+                            Resetează formularul
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>

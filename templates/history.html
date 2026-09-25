@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulmoScan AI - Fișe pacienți</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        #sidebar { background: linear-gradient(180deg, #08122E, #1E1B4B); }
+    </style>
+</head>
+
+<body class="bg-[#f8fafc] flex h-screen text-gray-800">
+
+    <aside class="w-64 border-r border-gray-200 flex flex-col pt-4" id="sidebar">
+       <div class="flex flex-col items-center py-6 border-b border-white/10 mb-4">
+    <div class="w-16 h-16 bg-[#1a2a5e] rounded-2xl flex items-center justify-center mb-3 border border-white/20">
+        <i class="fa-solid fa-lungs text-3xl text-blue-400"></i>
+    </div>
+    <h1 class="text-white font-bold text-lg">PulmoScan AI</h1>
+    <p class="text-gray-400 text-xs mt-1">Versiunea 1.0</p>
+    <p class="text-gray-400 text-xs">© 2026</p>
+</div>
+<div class="px-6 py-6">
+    <p class="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400">
+        Navigare principală
+    </p>
+</div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="/" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-briefcase-medical mr-3 w-5"></i> Panou diagnostic
+            </a>
+
+         <a href="/history" class="flex items-center px-4 py-3 bg-blue-400 text-white rounded-lg text-sm font-medium shadow-sm transition">
+                <i class="fa-regular fa-folder-open mr-3 w-5"></i> Fișe pacienți
+            </a>
+
+            <a href="/quiz" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-stethoscope mr-3 w-5"></i> Evaluare simptome
+            </a>
+
+            <a href="/logs" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+                <i class="fa-solid fa-terminal mr-3 w-5"></i> Jurnal de activitate
+            </a>
+        </nav>
+
+<div class="mt-auto px-4 pb-6">
+    <div class="px-2 pt-8 pb-3">
+        <p class="text-[11px] font-bold tracking-[0.15em] uppercase text-gray-400">
+            Sistem
+        </p>
+    </div>
+
+    <a href="/logout"
+       class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 rounded-lg text-sm font-medium transition">
+        <i class="fa-solid fa-arrow-right-from-bracket mr-3 w-5"></i>
+        Deconectare
+    </a>
+</div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto bg-[#f8fafc]">
+
+       <header class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-20">
+    <div>
+        <h1 class="text-2xl font-semibold text-[#0a192f]">Fișe pacienți</h1>
+        <p class="text-sm text-gray-500 mt-1">Consultați și gestionați istoricul diagnosticelor pentru toate investigațiile pulmonare.</p>
+    </div>
+
+        <div class="relative border-l-2 pl-6 border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="text-right hidden md:block">
+                    <p class="text-sm font-bold text-[#0a192f] leading-tight">{{ current_user | capitalize }}</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ current_role }}</p>
+                </div>
+
+                <img src="https://ui-avatars.com/api/?name={{ current_user }}&background=0a192f&color=fff&rounded=true"
+                     class="w-10 h-10 shadow-sm border-2 border-white rounded-full">
+           </div>
+        </div>
+</header>
+
+        <div class="p-10 max-w-7xl mx-auto w-full">
+
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+
+                <div class="flex flex-wrap items-center gap-3">
+                    {% if records %}
+                    <a href="/export_csv"
+                        class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-50 transition shadow-sm">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel
+                    </a>
+
+                   <button id="deleteSelectedBtn"
+        type="submit"
+        form="deleteSelectedForm"
+        class="hidden flex items-center gap-2 bg-white border border-red-200 text-red-600 px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-red-50 transition shadow-sm">
+    <i class="fa-solid fa-trash"></i> Șterge selecția
+</button>
+
+                    {% endif %}
+
+                    <div class="relative">
+                        <input type="text"
+                               id="searchInput"
+                               placeholder="Căutați pacient..."
+                               class="pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+
+                        <i class="fa-solid fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <form id="deleteSelectedForm"
+                  method="POST"
+                  action="/delete_selected_records"
+                  onsubmit="return confirmDeleteSelected();">
+
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase w-12">
+                                    <input type="checkbox" id="selectAll" class="w-4 h-4 cursor-pointer">
+                                </th>
+
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Data scanării</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Pacient</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Email contact</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Diagnostic</th>
+                                <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase">Acțiuni</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-gray-200">
+                            {% for record in records %}
+                            <tr class="hover:bg-gray-50 transition patient-row">
+
+                                <td class="px-6 py-4">
+                                    <input type="checkbox"
+                                           name="selected_records"
+                                           value="{{ record['id'] }}"
+                                           class="record-checkbox w-4 h-4 cursor-pointer">
+                                </td>
+
+                                <td class="px-6 py-4 text-sm text-gray-600">
+                                    {{ record['created_at'] }}
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-[#0f172a]">{{ record['patient_name'] }}</div>
+                                    <div class="text-xs text-gray-500">{{ record['patient_age'] }} ani, {{ record['patient_sex'] }}</div>
+                                </td>
+
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    {{ record['patient_email'] if record['patient_email'] else '—' }}
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    {% if record['prediction'] == 'NORMAL' %}
+                                        <span class="px-2 py-1 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-800">
+                                            {{ record['prediction'] }}
+                                        </span>
+                                    {% elif record['prediction'] == 'BACTERIAL' %}
+                                        <span class="px-2 py-1 text-[10px] font-black rounded-full bg-red-100 text-red-800">
+                                            {{ record['prediction'] }}
+                                        </span>
+                                    {% elif record['prediction'] == 'VIRAL' %}
+                                        <span class="px-2 py-1 text-[10px] font-black rounded-full bg-blue-100 text-blue-800">
+                                            {{ record['prediction'] }}
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2 py-1 text-[10px] font-black rounded-full bg-gray-100 text-gray-800">
+                                            {{ record['prediction'] }}
+                                        </span>
+                                    {% endif %}
+
+                                    {% if record['confidence'] %}
+                                    <div class="text-[11px] text-gray-400 mt-1">
+                                        {{ record['confidence'] }}% încredere
+                                    </div>
+                                    {% endif %}
+                                </td>
+
+                                <td class="px-6 py-4 text-right text-sm">
+                                    <div class="flex justify-end items-center gap-4">
+
+                                       <a href="/report/{{ record['id'] }}"
+   target="_blank"
+   class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold transition">
+    <i class="fa-solid fa-file-pdf"></i>
+    Raport
+</a>
+
+                                        <button type="submit"
+                                                formaction="/delete_record/{{ record['id'] }}"
+                                                formmethod="POST"
+                                                onclick="return confirm('Sigur doriți să ștergeți această fișă a pacientului?');"
+                                                class="text-red-600 hover:text-red-800 font-bold">
+                                            <i class="fa-solid fa-trash"></i> Șterge
+                                        </button>
+
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-16 text-center">
+                                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3 text-gray-400">
+                                        <i class="fa-regular fa-folder-open text-xl"></i>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-gray-900">Nicio fișă de pacient găsită</h3>
+                                    <p class="text-xs text-gray-500 mt-1">Noile analize vor apărea aici după rularea fluxului de diagnosticare.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </form>
+
+        </div>
+    </main>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const filter = this.value.toLowerCase();
+
+                document.querySelectorAll('.patient-row').forEach(row => {
+                    row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+                });
+            });
+        }
+
+        const selectAll = document.getElementById('selectAll');
+
+       if (selectAll) {
+    selectAll.addEventListener('change', function() {
+        document.querySelectorAll('.record-checkbox').forEach(checkbox => {
+            if (checkbox.closest('.patient-row').style.display !== 'none') {
+                checkbox.checked = selectAll.checked;
+            }
+        });
+
+        updateDeleteSelectedButton();
+    });
+}
+        function confirmDeleteSelected() {
+            const checked = document.querySelectorAll('.record-checkbox:checked');
+
+            if (checked.length === 0) {
+                alert('Vă rugăm să selectați cel puțin o fișă de pacient pentru a fi ștearsă.');
+                return false;
+            }
+
+            return confirm('Sigur doriți să ștergeți fișele selectate? Această acțiune este ireversibilă.');
+        }
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+
+function updateDeleteSelectedButton() {
+    const checked = document.querySelectorAll('.record-checkbox:checked');
+
+    if (checked.length > 0) {
+        deleteSelectedBtn.classList.remove('hidden');
+    } else {
+        deleteSelectedBtn.classList.add('hidden');
+    }
+}
+
+document.querySelectorAll('.record-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateDeleteSelectedButton);
+});
+
+updateDeleteSelectedButton();
+    </script>
+
+</body>
+</html>
